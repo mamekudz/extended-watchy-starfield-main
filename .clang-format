@@ -1,0 +1,3 @@
+# .clang-format
+BasedOnStyle: LLVM
+ColumnLimit: 0
