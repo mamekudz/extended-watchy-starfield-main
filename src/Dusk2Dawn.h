@@ -19,6 +19,8 @@
       float getSolarDeclination(int y, int m, int d);
       bool isPolarWinter(int y, int m, int d, bool isDST);
       static bool min2str(char*, int);
+      int getSolarNoonTime(int y, int m, int d, bool isDST);
+      int getSolarMidnightTime(int y, int m, int d, bool isDST);
     private:
       float _latitude, _longitude;
       int   _timezone;

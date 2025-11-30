@@ -1,4 +1,3 @@
-
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
@@ -8,8 +7,11 @@
 // 1 == correct working display
 // 0 == not working display
 
+#define HOUR24 true
+#define METRIC true
+// ... you have also set your weather url to unit=imperial
 #define LOC 49.35, 8.65, 1
-#define OPENWEATHERMAP_URL "https://api.openweathermap.org/data/3.0/onecall?lat=49.35&lon=8.6&exclude=minutely,hourly,daily,alerts&appid=yourapikey&units=metric&lang=de" //open weather api
+#define OPENWEATHERMAP_URL "https://api.openweathermap.org/data/3.0/onecall?lat=49.35&lon=8.6&exclude=minutely,hourly,daily,alerts&appid=yourapikey&units=metric&lang=de" // open weather api
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600L
 
@@ -33,12 +35,11 @@
 #define MONTH_NOV "Nov"
 #define MONTH_DEC "Dez"
 
-
 // =================================================================================
 
 #define EXPAND_MACRO(x) x
 #define GET_LATITUDE_IMPL(A, B, C) A
-#define GET_LONGITUDE_IMPL(A, B, C) B 
+#define GET_LONGITUDE_IMPL(A, B, C) B
 #define GET_TIMEZONE_IMPL(A, B, C) C
 #define PASS_LOC(M) M
 #define GET_LATITUDE(M) EXPAND_MACRO(GET_LATITUDE_IMPL M)
@@ -47,6 +48,4 @@
 
 #define IS_NORTH GET_LATITUDE((LOC)) > 0
 
-
 #endif
-

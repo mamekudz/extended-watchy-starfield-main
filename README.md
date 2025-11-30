@@ -30,7 +30,8 @@ Features
   press up-button while seconds display mode to clear memory timestamp, press menu-button while seconds display mode to switch off seconds display mode without any
   memory timestamp changes. (Nice option to remember taking medication.)
 * sun display based on north or south hemisphere (left to right or right to left)
-* sun display shows no data while polar winter or polar summer if geocoordinates indicates a polar position.
+* sun display shows no data while polar winter or polar sun position in polar summer if geocoordinates indicates a polar position.
+* 24 Hour Display and imperial units are now configurable in settings.h.
 
 All basic configurations can be done in settings.h.
 

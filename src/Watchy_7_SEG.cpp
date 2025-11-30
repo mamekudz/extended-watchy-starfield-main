@@ -21,7 +21,6 @@ const uint8_t WEATHER_ICON_HEIGHT = 32;
 RTC_DATA_ATTR bool firstWeatherNotDone = true;
 
 RTC_DATA_ATTR bool DARKMODE = false;
-RTC_DATA_ATTR bool HOUR_24SET = true;
 RTC_DATA_ATTR int DISPMODE = DISMODE_MOON;
 RTC_DATA_ATTR long LASTMEMTIME = 0;
 
@@ -172,12 +171,27 @@ void Watchy7SEG::handleButtonPress() {
   return;
 }
 
+
+void Watchy7SEG::drawTimeDigits(int hour, int minute, int x_start, int y_start) {
+  uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
+  int h1 = hour / 10;
+  int h2 = hour % 10;
+  int m1 = minute / 10;
+  int m2 = minute % 10;
+  if (h1 != 0 || hour >= 10) {
+    display.drawBitmap(x_start, y_start, NUM_BITMAPS[h1], 3, 5, color);
+  }
+  display.drawBitmap(x_start + 4, y_start, NUM_BITMAPS[h2], 3, 5, color);
+  display.drawBitmap(x_start + 8, y_start, num_dots, 3, 5, color);
+  display.drawBitmap(x_start + 12, y_start, NUM_BITMAPS[m1], 3, 5, color);
+  display.drawBitmap(x_start + 16, y_start, NUM_BITMAPS[m2], 3, 5, color);
+}
+
 void Watchy7SEG::drawWatchFace() {
   if (currentTime.Hour == 3 && currentTime.Minute == 0) {
     if (!WAS_NTP_UPDATE) {
       if (connectWiFi()) syncNTP();
       WAS_NTP_UPDATE = true;
-      Serial.print("!!!!! syncNTP !!!!!!!!!!!");
     }
   } else {
     WAS_NTP_UPDATE = false;
@@ -213,18 +227,21 @@ void Watchy7SEG::drawWatchFace() {
 void Watchy7SEG::drawTime() {
   const unsigned char *digitBitmaps[] = {fd_0, fd_1, fd_2, fd_3, fd_4,
                                          fd_5, fd_6, fd_7, fd_8, fd_9};
+  const int x = 34;
+  const int y = 63;
+
   int hours = currentTime.Hour;
   int minutes = currentTime.Minute;
   int color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
-  if (HOUR_24SET == false) {
-    display.fillRect(7, 60, 25, 9, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
+  if (HOUR24 == false) {
+    display.fillRect (x, y, 25, 9, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
     if (hours >= 12) {
-      display.drawBitmap(7, 60, pm, 25, 9, color);
+      display.drawBitmap (x, y, pm, 25, 9, color);
     } else {
-      display.drawBitmap(7, 60, am, 25, 9, color);
+      display.drawBitmap (x, y, am, 25, 9, color);
     }
   }
-  if (HOUR_24SET == false) {
+  if (HOUR24 == false) {
     if (hours > 12) {
       hours -= 12;
     } else if (hours == 0) {
@@ -426,7 +443,7 @@ void Watchy7SEG::drawBgrd() {
     display.drawBitmap(109, 62, bgrdadd_sun, 91, 80, color);
     break;
   case DISMODE_WEATHER:
-    display.drawBitmap(109, 62, bgrdadd_weather, 83, 65, color);
+    display.drawBitmap(109, 62, METRIC ? bgrdadd_weather_c : bgrdadd_weather_f, 83, 65, color);
     break;
   }
 }
@@ -524,6 +541,123 @@ void Watchy7SEG::drawMoonTimes() {
     }
 }
 
+/*
+oid Watchy7SEG::drawSunTimes() {
+  Dusk2Dawn location(LOC);
+  int year = currentTime.Year + 1970;
+  int32_t month = currentTime.Month;
+  int32_t day = currentTime.Day;
+  time_t ct = now();
+  bool isDST = Watchy::isDST(ct);
+  int sr = location.sunrise(year, month, day, isDST);
+  int ss = location.sunset(year, month, day, isDST);
+  int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
+  const uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
+  bool isPolarSummer = false;
+  int highest_min = 0;
+  int lowest_min = 0;
+
+  if (sr == -1 || ss == -1) {
+    if (location.isPolarWinter(year, month, day, isDST)) {
+      display.drawBitmap(139, 67, polarwinter, 44, 5, color);
+      return;
+    } else {
+      isPolarSummer = true;
+      display.drawBitmap(139, 137, polarsummer, 47, 5, color);
+
+      highest_min = location.getSolarNoonTime(year, month, day, isDST);
+      lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
+
+      if (lowest_min < highest_min) {
+        sr = lowest_min;
+        ss = highest_min;
+      } else {
+        sr = lowest_min;
+        ss = highest_min;
+      }
+    }
+  }
+
+  int travel_range = isPolarSummer ? 1440 : ss - sr;
+  long current_minutes = now_minutes;
+  int tk;
+
+  if (isPolarSummer) {
+    long minutes_since_sr = (current_minutes - sr + 1440) % 1440;
+    tk = (int)((minutes_since_sr) * 60L / travel_range);
+  } else {
+    if (current_minutes >= ss) {
+      tk = 60;
+    } else if (current_minutes <= sr) {
+      tk = 0;
+    } else {
+      tk = (int)((current_minutes - sr) * 60L / travel_range);
+    }
+  }
+
+  display.drawBitmap(110, 132 - tk, arr, 3, 5, color);
+
+  int sunrise_h = sr / 60;
+  int sunrise_m = sr % 60;
+  int sunset_h = ss / 60;
+  int sunset_m = ss % 60;
+
+  if (HOUR_24SET == false) {
+    if (sunrise_h > 12)
+      sunrise_h -= 12;
+    if (sunset_h > 12)
+      sunset_h -= 12;
+  }
+
+  drawTimeDigits(sunset_h, sunset_m, 116, 137);
+  display.drawBitmap(139, 137, sunset, 28, 5, color);
+  drawTimeDigits(sunrise_h, sunrise_m, 116, 67);
+  display.drawBitmap(139, 67, sunrise, 30, 5, color);
+
+  const uint8_t *md_bitmaps[] = {md_0, md_1, md_2, md_3, md_4,
+                                 md_5, md_6, md_7, md_8, md_9};
+
+  int h = 0;
+  int m = 0;
+  int s = 0;
+
+  if (isPolarSummer) {
+    int next_min = 0;
+    long time_to_highest = (highest_min - current_minutes + 1440) % 1440;
+    long time_to_lowest = (lowest_min - current_minutes + 1440) % 1440;
+
+    if (time_to_highest <= time_to_lowest) {
+      next_min = time_to_highest;
+      s = -2;
+    } else {
+      next_min = time_to_lowest;
+      s = -3;
+    }
+
+    h = next_min / 60;
+    m = next_min % 60;
+
+  } else {
+    if (current_minutes > sr && current_minutes < ss) {
+      int nxtset = ss - current_minutes;
+      h = nxtset / 60;
+      m = nxtset % 60;
+      s = -2;
+    } else if (current_minutes > ss || current_minutes < sr) {
+      int nxtrise = 0;
+      if (current_minutes < sr) {
+        nxtrise = sr - current_minutes;
+      } else if (current_minutes > ss) {
+        nxtrise = (24 * 60 - current_minutes) + sr;
+      }
+      h = nxtrise / 60;
+      m = nxtrise % 60;
+      s = -3;
+    }
+  }
+
+*/
+
 
 void Watchy7SEG::drawSunTimes() {
   Dusk2Dawn location(LOC);
@@ -543,14 +677,6 @@ void Watchy7SEG::drawSunTimes() {
     }else{
       display.drawBitmap(139, 137, polarsummer, 47, 5, color);
     }
-    /*
-    if (sr == -1) {
-      display.drawBitmap(139, 67, norise, 3, 5, color);
-    }
-    if (ss == -1) {
-      display.drawBitmap(139, 137, noset, 3, 5, color);
-    }
-    */
     return;
   }
 
@@ -572,7 +698,7 @@ void Watchy7SEG::drawSunTimes() {
   int sunset_h = ss / 60;
   int sunset_m = ss % 60;
 
-  if (HOUR_24SET == false) {
+  if (HOUR24 == false) {
     if (sunrise_h > 12)
       sunrise_h -= 12;
     if (sunset_h > 12)
@@ -622,42 +748,8 @@ void Watchy7SEG::drawSunTimes() {
     display.drawBitmap(169, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
     display.drawBitmap(173, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
   }
-
-  /*
-  int sun_x[3] = {152, 147, 158};
-  int sun_y[3] = {92, 111, 111};
-  int digits[3] = {s, h / 10, h % 10};
-  for (int i = 0; i < 3; i++) {
-    int digit = digits[i];
-    if (digit >= 0 && digit <= 9) {
-      display.drawBitmap(sun_x[i], sun_y[i], md_bitmaps[digit], bitmap_w, bitmap_h, color);
-    } else if ( digit == -1) {
-      display.drawBitmap(sun_x[i], sun_y[i], md_dots, bitmap_w, bitmap_h, color);
-    } else if ( digit == -2) {
-      display.drawBitmap(sun_x[i], sun_y[i], md_set, bitmap_w, bitmap_h, color);
-    } else if ( digit == -3) {
-      display.drawBitmap(sun_x[i], sun_y[i], md_rise, bitmap_w, bitmap_h, color);
-    }
-  }
-  display.drawBitmap(169, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
-  display.drawBitmap(173, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
-  */
 }
 
-void Watchy7SEG::drawTimeDigits(int hour, int minute, int x_start, int y_start) {
-  uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
-  int h1 = hour / 10;
-  int h2 = hour % 10;
-  int m1 = minute / 10;
-  int m2 = minute % 10;
-  if (h1 != 0 || hour >= 10) {
-    display.drawBitmap(x_start, y_start, NUM_BITMAPS[h1], 3, 5, color);
-  }
-  display.drawBitmap(x_start + 4, y_start, NUM_BITMAPS[h2], 3, 5, color);
-  display.drawBitmap(x_start + 8, y_start, num_dots, 3, 5, color);
-  display.drawBitmap(x_start + 12, y_start, NUM_BITMAPS[m1], 3, 5, color);
-  display.drawBitmap(x_start + 16, y_start, NUM_BITMAPS[m2], 3, 5, color);
-}
 
 void Watchy7SEG::drawSun() {
   time_t ct = now();
@@ -668,40 +760,68 @@ void Watchy7SEG::drawSun() {
   int32_t day = currentTime.Day;
   int sr = location.sunrise(year, month, day, isDST);
   int ss = location.sunset(year, month, day, isDST);
-  int now = currentTime.Hour * 60 + currentTime.Minute;
+  int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
+  bool isPolarSummer = false;
 
-  if (sr == -1 || ss == -1) return;
+  if (sr == -1 && ss == -1) {
+    if (location.isPolarWinter(year, month, day, isDST)) {
+      return; 
+      isPolarSummer = true;
+      int highest_min = location.getSolarNoonTime(year, month, day, isDST);
+      int lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
 
+      if (lowest_min < highest_min) {
+        sr = lowest_min;
+        ss = highest_min;
+      } else {
+        sr = lowest_min;
+        ss = highest_min;
+      }
+    }
+  }
 
   int coor[190] = {
-    0,0, 1,0, 2,1, 3,1, 4,2, 5,2, 6,6, 7,7, 8,8, 9,9, 9,10, 10,11,
-    10,12, 11,13, 11,14, 12,15, 12,16, 13,17, 13,18, 13,19, 14,20,
-    14,21, 14,22, 15,23, 15,24, 16,25, 16,26, 17,27, 17,28, 18,29,
-    18,30, 19,31, 19,32, 19,33, 20,34, 20,35, 21,36, 21,37, 22,38,
-    22,39, 23,40, 24,41, 25,42, 26,43, 27,44, 28,44, // Index 46: (28, 44) - Zenit
-
-    29,44,
-    30,44,
-    32,44,
-    33,44,
-
-    34,44, 35,43, 36,42, 37,41, 38,40, 39,39, 39,38, 40,37, 40,36,
-    41,35, 41,34, 42,33, 42,32, 42,31, 43,30, 43,29, 44,28, 44,27,
-    45,26, 45,25, 46,24, 46,23, 47,22, 47,21, 47,20, 48,19, 48,18,
-    48,17, 49,16, 49,15, 50,14, 50,13, 51,12, 51,11, 52,10, 52,9,
-    53,8, 54,7, 55,6, 56,5, 57,2, 58,2, 59,1, 60,1, 61,0 // Index 92: (56, 0) - Sonnenuntergang
+      0,0, 1,0, 2,1, 3,1, 4,2, 5,2, 6,6, 7,7, 8,8, 9,9, 9,10, 10,11,
+      10,12, 11,13, 11,14, 12,15, 12,16, 13,17, 13,18, 13,19, 14,20,
+      14,21, 14,22, 15,23, 15,24, 16,25, 16,26, 17,27, 17,28, 18,29,
+      18,30, 19,31, 19,32, 19,33, 20,34, 20,35, 21,36, 21,37, 22,38,
+      22,39, 23,40, 24,41, 25,42, 26,43, 27,44, 28,44, 
+      29,44, 30,44, 32,44, 33,44,
+      34,44, 35,43, 36,42, 37,41, 38,40, 39,39, 39,38, 40,37, 40,36,
+      41,35, 41,34, 42,33, 42,32, 42,31, 43,30, 43,29, 44,28, 44,27,
+      45,26, 45,25, 46,24, 46,23, 47,22, 47,21, 47,20, 48,19, 48,18,
+      48,17, 49,16, 49,15, 50,14, 50,13, 51,12, 51,11, 52,10, 52,9,
+      53,8, 54,7, 55,6, 56,5, 57,2, 58,2, 59,1, 60,1, 61,0 
   };
-
-  if (now >= sr || now <= ss) {
-    bool isNorth = IS_NORTH;
-    double tx = 95.0 / (ss - sr) * (now - sr);
+  
+  if (isPolarSummer) {
+    double total_minutes_in_day = 1440.0;
+    double now_adjusted = (now_minutes - sr + total_minutes_in_day);
+    now_adjusted = fmod(now_adjusted, total_minutes_in_day);
+    double tx = 95.0 / total_minutes_in_day * now_adjusted;
     int t = static_cast<int>(std::round(tx)) * 2;
-    int x = 125 + (IS_NORTH ? coor[t] : (61 - coor[t]));
-    int y = 124 - coor[t + 1];
-    //if (x > 9 && x < 190 && y > 9 && y < 190) {
+    if (t < 190) { 
+      bool isNorth = IS_NORTH;
+      int x = 125 + (isNorth ? coor[t] : (61 - coor[t]));
+      int y = 124 - coor[t + 1];
+
       display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
       display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
-    //}
+    }
+  } else {
+    if (now_minutes >= sr || now_minutes <= ss) {
+      bool isNorth = IS_NORTH;
+      double tx = 95.0 / (ss - sr) * (now_minutes - sr);
+      int t = static_cast<int>(std::round(tx)) * 2;
+
+      if (t < 190) {
+        int x = 125 + (isNorth ? coor[t] : (61 - coor[t]));
+        int y = 124 - coor[t + 1];
+
+        display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
+        display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
+      }
+    }
   }
 }
 
