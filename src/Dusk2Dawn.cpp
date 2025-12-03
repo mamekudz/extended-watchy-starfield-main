@@ -331,3 +331,4 @@ int Dusk2Dawn::getSolarMidnightTime(int y, int m, int d, bool isDST) {
   }
   return midnight_time;
 }
+

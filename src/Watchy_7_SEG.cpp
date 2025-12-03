@@ -541,8 +541,8 @@ void Watchy7SEG::drawMoonTimes() {
     }
 }
 
-/*
-oid Watchy7SEG::drawSunTimes() {
+
+void Watchy7SEG::drawSunTimes() {
   Dusk2Dawn location(LOC);
   int year = currentTime.Year + 1970;
   int32_t month = currentTime.Month;
@@ -560,14 +560,12 @@ oid Watchy7SEG::drawSunTimes() {
   if (sr == -1 || ss == -1) {
     if (location.isPolarWinter(year, month, day, isDST)) {
       display.drawBitmap(139, 67, polarwinter, 44, 5, color);
+      display.drawBitmap(139, 137, polarwinter, 44, 5, color);
       return;
     } else {
       isPolarSummer = true;
-      display.drawBitmap(139, 137, polarsummer, 47, 5, color);
-
-      highest_min = location.getSolarNoonTime(year, month, day, isDST);
-      lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
-
+      //highest_min = location.getSolarNoonTime(year, month, day, isDST);
+      //lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
       if (lowest_min < highest_min) {
         sr = lowest_min;
         ss = highest_min;
@@ -595,24 +593,30 @@ oid Watchy7SEG::drawSunTimes() {
     }
   }
 
-  display.drawBitmap(110, 132 - tk, arr, 3, 5, color);
+  display.drawBitmap(110, 72 + tk, arr, 3, 5, color);
 
   int sunrise_h = sr / 60;
   int sunrise_m = sr % 60;
   int sunset_h = ss / 60;
   int sunset_m = ss % 60;
 
-  if (HOUR_24SET == false) {
-    if (sunrise_h > 12)
-      sunrise_h -= 12;
-    if (sunset_h > 12)
-      sunset_h -= 12;
+  if (HOUR24 == false) {
+    if (sunrise_h > 12) sunrise_h -= 12;
+    if (sunset_h > 12) sunset_h -= 12;
   }
 
   drawTimeDigits(sunset_h, sunset_m, 116, 137);
-  display.drawBitmap(139, 137, sunset, 28, 5, color);
+  if (isPolarSummer) {
+    display.drawBitmap(139, 137, polarsummer, 51, 5, color);
+  } else {
+    display.drawBitmap(139, 137, sunset, 28, 5, color);
+  }
   drawTimeDigits(sunrise_h, sunrise_m, 116, 67);
-  display.drawBitmap(139, 67, sunrise, 30, 5, color);
+  if (!isPolarSummer) {
+    display.drawBitmap(139, 67, polarsummer, 51, 5, color);
+  } else {
+    display.drawBitmap(139, 67, sunrise, 30, 5, color);
+  }
 
   const uint8_t *md_bitmaps[] = {md_0, md_1, md_2, md_3, md_4,
                                  md_5, md_6, md_7, md_8, md_9};
@@ -656,97 +660,20 @@ oid Watchy7SEG::drawSunTimes() {
     }
   }
 
-*/
-
-
-void Watchy7SEG::drawSunTimes() {
-  Dusk2Dawn location(LOC);
-  int year = currentTime.Year + 1970;
-  int32_t month = currentTime.Month;
-  int32_t day = currentTime.Day;
-  time_t ct = now();
-  bool isDST = Watchy::isDST(ct);
-  int sr = location.sunrise(year, month, day, isDST);
-  int ss = location.sunset(year, month, day, isDST);
-  int now = currentTime.Hour * 60 + currentTime.Minute;
-  const uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
-  
-  if (sr == -1 || ss == -1) {
-    if (location.isPolarWinter(year, month, day, isDST)) {
-      display.drawBitmap(139, 67, polarwinter, 44, 5, color);
-    }else{
-      display.drawBitmap(139, 137, polarsummer, 47, 5, color);
-    }
-    return;
-  }
-
-  long current_minutes = currentTime.Hour * 60 + currentTime.Minute;
-  int travel_range = ss - sr;
-  int tk;
-  if (current_minutes >= ss) {
-    tk = 60;
-  } else if (current_minutes <= sr) {
-    tk = 0;
-  } else {
-    tk = (int)((current_minutes - sr) * 60L / travel_range);
-  }
-
-  display.drawBitmap(110, 132 - tk, arr, 3, 5, color);
-
-  int sunrise_h = sr / 60;
-  int sunrise_m = sr % 60;
-  int sunset_h = ss / 60;
-  int sunset_m = ss % 60;
-
-  if (HOUR24 == false) {
-    if (sunrise_h > 12)
-      sunrise_h -= 12;
-    if (sunset_h > 12)
-      sunset_h -= 12;
-  }
-
-  drawTimeDigits(sunset_h, sunset_m, 116, 137);
-  display.drawBitmap(139, 137, sunset, 28, 5, color);
-  drawTimeDigits(sunrise_h, sunrise_m, 116, 67);
-  display.drawBitmap(139, 67, sunrise, 30, 5, color);
-
-  const uint8_t *md_bitmaps[] = {md_0, md_1, md_2, md_3, md_4,
-                                 md_5, md_6, md_7, md_8, md_9};
-
-  int h = 0;
-  int m = 0;
-  int s = 0;
-
-  if (now > sr && now < ss) {
-    int nxtset = ss - now;
-    h = nxtset / 60;
-    m = nxtset % 60;
-    s = -2;
-  } else if (now > ss || now < sr) {
-    int nxtrise = 0;
-    if (now < sr) {
-      nxtrise = sr - now;
-    } else if (now > ss) {
-      nxtrise = (24*60 - now) + sr;
-    }
-    h = nxtrise / 60;
-    m = nxtrise % 60;
-    s = -3;
-  }
-
   const uint16_t bitmap_w = 10;
   const uint16_t bitmap_h = 16;
   int mdigits[2] = {m / 10, m % 10};
   int digits[2] = {h / 10, h % 10};
-  if (digits[0] ==  0) {
-    display.drawBitmap(152, 111, md_bitmaps[digits[1]], bitmap_w, bitmap_h, color);
-    display.drawBitmap(163, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
-    display.drawBitmap(167, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
+  
+  if (digits[0] == 0) {
+      display.drawBitmap(152, 111, md_bitmaps[digits[1]], bitmap_w, bitmap_h, color);
+      display.drawBitmap(163, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
+      display.drawBitmap(167, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
   } else {
-    display.drawBitmap(147, 111, md_bitmaps[digits[0]], bitmap_w, bitmap_h, color);
-    display.drawBitmap(158, 111, md_bitmaps[digits[1]], bitmap_w, bitmap_h, color);
-    display.drawBitmap(169, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
-    display.drawBitmap(173, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
+      display.drawBitmap(147, 111, md_bitmaps[digits[0]], bitmap_w, bitmap_h, color);
+      display.drawBitmap(158, 111, md_bitmaps[digits[1]], bitmap_w, bitmap_h, color);
+      display.drawBitmap(169, 122, NUM_BITMAPS[mdigits[0]], 3, 5, color);
+      display.drawBitmap(173, 122, NUM_BITMAPS[mdigits[1]], 3, 5, color);
   }
 }
 
