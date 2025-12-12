@@ -21,7 +21,7 @@ Features
 * weather update hourly or by selecting weather mode
 * moon set and rise times
 * sun set and rise times
-* corrected battery status display (3,4V to 4.2V)
+* corrected battery status display (3.2V to 4.2V)
 * 24h hours display is fixed configurated
 * units are fixed configurated to "metric"
 * create you own open weather key/url by defining url
@@ -40,6 +40,8 @@ All basic configurations can be done in settings.h.
 
 I own two Watchys. Strangely enough, the displays behave differently; only one Watchy performs the partial update correctly. Set DISPLAYTYPE in settings.h
 to 1 if you have a well running display, try to set it to 0, if not.
+
+A magnetic watch strap for watchy: https://makerworld.com/en/models/2048997-magnetic-watch-strap-20mm-and-22mm?from=search#profileId-2211213
 
 This repository contains a extendtion of the repaired version of the Starfield Watchy firmware (https://github.com/Szybet/watchy-starfield).
 Thanks you to https://github.com/Szybet
@@ -69,7 +71,7 @@ Funktionen
 * Wetteraktualisierung stündlich oder durch Auswahl des Wettermodus
 * Mondauf- und -untergangszeiten
 * Sonnenauf- und -untergangszeiten
-* Korrigierte Batteriestatusanzeige (3,4 V bis 4,2 V)
+* Korrigierte Batteriestatusanzeige (3,2 V bis 4,2 V)
 * 24-Stunden-Anzeige ist fest konfiguriert
 * Einheiten sind fest auf „metrisch” konfiguriert
 * Erstellen Sie Ihren eigenen Open-Weather-Schlüssel/URL, indem Sie die URL definieren
@@ -80,7 +82,7 @@ Funktionen
   Drücken Sie die Aufwärts-Taste während der Sekundenanzeige, um den Speicherzeitstempel zu löschen, drücken Sie die Menü-Taste während der Sekundenanzeige, um den Sekundenanzeigemodus ohne Änderungen am Speicherzeitstempel auszuschalten.
   (Praktische Option, um an die Einnahme von Medikamenten zu erinnern.)
 * Sonnenanzeige basierend auf der nördlichen oder südlichen Hemisphäre (von links nach rechts oder von rechts nach links)
-* Die Sonnenanzeige zeigt keine Daten an, wenn die Geokoordinaten eine polare Position anzeigen, d. h. während des Polwinters oder bei polarer Sonnenposition im Polsommer.
+* Die Sonnenanzeige zeigt keine Daten an, wenn die Geokoordinaten eine polare Position anzeigen, d. h. während des Polarwinters oder bei polarer Sonnenposition im Polarsommer.
 * 24-Stunden-Anzeige und imperiale Einheiten sind jetzt in settings.h konfigurierbar.
 * Saisonanzeige: Anzeige der lokalen Jahreszeit als vertikaler Text, Anzeige der astronomischen Jahreszeit als Pfeil auf der Skala (0° bis 360°)
 
@@ -88,6 +90,8 @@ Alle Grundkonfigurationen können in settings.h vorgenommen werden.
 
 Ich besitze zwei Watchys. Seltsamerweise verhalten sich die Anzeigen unterschiedlich; nur eine Watchy führt die Teilaktualisierung korrekt durch. Setzen Sie DISPLAYTYPE in settings.h
 auf 1, wenn Sie ein gut funktionierendes Display haben, versuchen Sie es sonst mit 0.
+
+Ein magnetisches Armband für die Watchy: https://makerworld.com/en/models/2048997-magnetic-watch-strap-20mm-and-22mm?from=search#profileId-2211213
 
 Dieses Repository enthält eine Erweiterung der reparierten Version der Starfield Watchy-Firmware (https://github.com/Szybet/watchy-starfield).
 Vielen Dank an https://github.com/Szybet

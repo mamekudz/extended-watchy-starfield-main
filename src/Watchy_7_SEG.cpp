@@ -34,7 +34,9 @@ const uint8_t *const NUM_BITMAPS[] = {num_0, num_1, num_2, num_3, num_4,
 struct {
   float voltage;
   int8_t level;
-} const BatteryLevels[] = {
+}
+
+const BatteryLevels[] = {
     {4.1, 37},
     {4.0, 33},
     {3.9, 28},
@@ -43,7 +45,10 @@ struct {
     {3.6, 13},
     {3.5, 8},
     {3.4, 4},
+    {3.3, 2},
+    {3.2, 0}
 };
+
 const size_t NUM_LEVELS = sizeof(BatteryLevels) / sizeof(BatteryLevels[0]);
 
 const char ddayStr0[] PROGMEM = "Err";
