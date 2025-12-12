@@ -1,3 +1,5 @@
+English
+
 # Extension of the Repaired Starfield Watchy Firmware incl. Seconds Display via Partial Update
 
 An extended Sstarfield watchface for Watchy
@@ -32,6 +34,7 @@ Features
 * sun display based on north or south hemisphere (left to right or right to left)
 * sun display shows no data while polar winter or polar sun position in polar summer if geocoordinates indicates a polar position.
 * 24 Hour Display and imperial units are now configurable in settings.h.
+* Season indicator: Display of the local season as vertical text, display of the astronomical season as an arrow on the scale (0° to 360°)
 
 All basic configurations can be done in settings.h.
 
@@ -41,4 +44,51 @@ to 1 if you have a well running display, try to set it to 0, if not.
 This repository contains a extendtion of the repaired version of the Starfield Watchy firmware (https://github.com/Szybet/watchy-starfield).
 Thanks you to https://github.com/Szybet
 
+-----------------------------------------------------------------------------------
+Deutsch
+
+# Erweiterung der reparierten Starfield Watchy-Firmware inkl. Sekundenanzeige durch Teil-Update
+
+Ein erweitertes Sstarfield-Zifferblatt für Watchy
+
+![picture](/assets/watchy_seconds.gif)
+
+
+Funktionen
+
+* Drei neue Anzeigemodi für die Mondanzeige hinzugefügt: Mond, Sonne, Wetter und Sekunden (Anzeige der Sekunden für 30 Sekunden mit teilweiser Aktualisierung)
+* Mondanzeige (Aufwärts-Taste): Mondphase, Auf- und Untergangszeit
+* Sonnenanzeige (Aufwärts-Taste): Sonnenposition und Auf- und Untergangszeit
+* Wetter (Aufwärts-Taste): Wettersymbol und Temperatur, neue nächtliche Wettersymbole
+* Sekunden (Abwärts-Taste): Sekunden für 30 Sekunden mit teilweiser Aktualisierung der Anzeige
+* Schwarz auf Weiß <=> Weiß auf Schwarz (Zurück-Taste)
+* Menü (Auswahl-Taste)
+* Zurück-Taste: Dunkelmodus / Hellmodus
+* Automatische Sommerzeit-Einstellung über NTP
+* NTP-Synchronisierung täglich um 3 Uhr morgens
+* Wetteraktualisierung stündlich oder durch Auswahl des Wettermodus
+* Mondauf- und -untergangszeiten
+* Sonnenauf- und -untergangszeiten
+* Korrigierte Batteriestatusanzeige (3,4 V bis 4,2 V)
+* 24-Stunden-Anzeige ist fest konfiguriert
+* Einheiten sind fest auf „metrisch” konfiguriert
+* Erstellen Sie Ihren eigenen Open-Weather-Schlüssel/URL, indem Sie die URL definieren
+* Konfiguration von Monats- und Tagesnamen, Standard ist Deutsch
+* Drücken der Aufwärts-Taste während der Anzeige der Sekunden: syncNTP wird aufgerufen
+* Drücken der Abwärts-Taste während der Anzeige der Sekunden: Rückkehr zum letzten Anzeigemodus
+* Speicherzeitstempel: Drücken Sie die Zurück-Taste während der Sekundenanzeige, um den Speicherzeitstempel zu setzen => die Differenz in Stunden und Sekunden wird danach im Sekundenmodus angezeigt.
+  Drücken Sie die Aufwärts-Taste während der Sekundenanzeige, um den Speicherzeitstempel zu löschen, drücken Sie die Menü-Taste während der Sekundenanzeige, um den Sekundenanzeigemodus ohne Änderungen am Speicherzeitstempel auszuschalten.
+  (Praktische Option, um an die Einnahme von Medikamenten zu erinnern.)
+* Sonnenanzeige basierend auf der nördlichen oder südlichen Hemisphäre (von links nach rechts oder von rechts nach links)
+* Die Sonnenanzeige zeigt keine Daten an, wenn die Geokoordinaten eine polare Position anzeigen, d. h. während des Polwinters oder bei polarer Sonnenposition im Polsommer.
+* 24-Stunden-Anzeige und imperiale Einheiten sind jetzt in settings.h konfigurierbar.
+* Saisonanzeige: Anzeige der lokalen Jahreszeit als vertikaler Text, Anzeige der astronomischen Jahreszeit als Pfeil auf der Skala (0° bis 360°)
+
+Alle Grundkonfigurationen können in settings.h vorgenommen werden.
+
+Ich besitze zwei Watchys. Seltsamerweise verhalten sich die Anzeigen unterschiedlich; nur eine Watchy führt die Teilaktualisierung korrekt durch. Setzen Sie DISPLAYTYPE in settings.h
+auf 1, wenn Sie ein gut funktionierendes Display haben, versuchen Sie es sonst mit 0.
+
+Dieses Repository enthält eine Erweiterung der reparierten Version der Starfield Watchy-Firmware (https://github.com/Szybet/watchy-starfield).
+Vielen Dank an https://github.com/Szybet
 
