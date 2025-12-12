@@ -2,7 +2,7 @@
 #define WATCHY_7_SEG_H
 #include <math.h>
 #include <Watchy.h>
-#include "Dusk2Dawn.h"
+#include "WatchyDusk2Dawn.h"
 #include "moonPhaser.h"
 #include "Seven_Segment10pt7b.h"
 #include "DSEG7_Classic_Regular_15.h"
@@ -13,7 +13,7 @@
 class Watchy7SEG : public Watchy{
     using Watchy::Watchy;
     public:
-        void drawWatchFace();
+       void drawWatchFace();
         void drawTime();
         void drawSeconds();
         void drawMemTime();
@@ -26,6 +26,7 @@ class Watchy7SEG : public Watchy{
         void drawMoonTimes();
         void drawSun();
         void drawWeather();
+        void drawSeason();
         void drawTimeDigits(int hour, int minute, int x_start, int y_start);
         virtual void handleButtonPress();
         char* ddayStr(uint8_t day);

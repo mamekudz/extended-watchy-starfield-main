@@ -79,6 +79,22 @@ const PROGMEM char *const PROGMEM dmonthNames_P[] = {
     dmonthStr5, dmonthStr6, dmonthStr7, dmonthStr8, dmonthStr9,
     dmonthStr10, dmonthStr11, dmonthStr12};
 
+    
+int SunCurve[190] = {
+      0,0, 1,0, 2,1, 3,1, 4,2, 5,2, 6,6, 7,7, 8,8, 9,9, 9,10, 10,11,
+      10,12, 11,13, 11,14, 12,15, 12,16, 13,17, 13,18, 13,19, 14,20,
+      14,21, 14,22, 15,23, 15,24, 16,25, 16,26, 17,27, 17,28, 18,29,
+      18,30, 19,31, 19,32, 19,33, 20,34, 20,35, 21,36, 21,37, 22,38,
+      22,39, 23,40, 24,41, 25,42, 26,43, 27,44, 28,44, 
+      29,44, 30,44, 32,44, 33,44,
+      34,44, 35,43, 36,42, 37,41, 38,40, 39,39, 39,38, 40,37, 40,36,
+      41,35, 41,34, 42,33, 42,32, 42,31, 43,30, 43,29, 44,28, 44,27,
+      45,26, 45,25, 46,24, 46,23, 47,22, 47,21, 47,20, 48,19, 48,18,
+      48,17, 49,16, 49,15, 50,14, 50,13, 51,12, 51,11, 52,10, 52,9,
+      53,8, 54,7, 55,6, 56,5, 57,2, 58,2, 59,1, 60,1, 61,0 
+  };
+  
+
 void Watchy7SEG::handleButtonPress() {
   if (guiState == WATCHFACE_STATE) {
     uint64_t wakeupBit = esp_sleep_get_ext1_wakeup_status();
@@ -172,6 +188,30 @@ void Watchy7SEG::handleButtonPress() {
 }
 
 
+void Watchy7SEG::drawSeason() {
+  int year = currentTime.Year + 1970;
+  int32_t month = currentTime.Month;
+  int32_t day = currentTime.Day;
+  float lat = GET_LATITUDE((LOC)); 
+  Season current_season = WatchyDusk2Dawn::getCurrentSeason(year, month, day, lat);
+  uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
+  switch(current_season) {
+      case SPRING:
+          display.drawBitmap(109, 74, spring, 5, 22, color);
+          break;
+      case SUMMER:
+          display.drawBitmap(109, 74, summer, 5, 27, color);
+          break;
+      case AUTUMN:
+          display.drawBitmap(109, 74, autumn, 5, 26, color);
+          break;
+      case WINTER:
+          display.drawBitmap(109, 74, winter, 5, 24, color);
+          break;
+  }
+  
+}
+
 void Watchy7SEG::drawTimeDigits(int hour, int minute, int x_start, int y_start) {
   uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
   int h1 = hour / 10;
@@ -188,6 +228,7 @@ void Watchy7SEG::drawTimeDigits(int hour, int minute, int x_start, int y_start) 
 }
 
 void Watchy7SEG::drawWatchFace() {
+  //Serial.print("drawWatchFace");
   if (currentTime.Hour == 3 && currentTime.Minute == 0) {
     if (!WAS_NTP_UPDATE) {
       if (connectWiFi()) syncNTP();
@@ -213,13 +254,16 @@ void Watchy7SEG::drawWatchFace() {
   case DISMODE_MOON:
     drawMoon();
     drawMoonTimes();
+    drawSeason();
     break;
   case DISMODE_SUN:
     drawSun();
     drawSunTimes();
+    drawSeason();
     break;
   case DISMODE_WEATHER:
     drawWeather();
+    drawSeason();
     break;
   }
 }
@@ -335,8 +379,8 @@ void Watchy7SEG::drawDate() {
 
   String dayOfWeek = ddayNames_P[currentTime.Wday];
   int l = dayOfWeek.length();
-  if (l > 6)
-    l = 6;
+  if (l > WEEKDAY_MAXNoOFCHARS)
+    l = WEEKDAY_MAXNoOFCHARS;
   dayOfWeek = dayOfWeek.substring(0, l);
   display.getTextBounds(dayOfWeek, 5, 85, &x1, &y1, &w, &h);
   if (currentTime.Wday == 4) {
@@ -493,6 +537,14 @@ void Watchy7SEG::drawMoonTimes() {
     long offset_sec = GMT_OFFSET_SEC + (Watchy::isDST(now_local) ? 3600L : 0L);
     time_t now_utc = now_local - offset_sec;
     
+    int year = currentTime.Year + 1970;
+    int32_t month = currentTime.Month;
+    int32_t day = currentTime.Day;
+    float lat = GET_LATITUDE((LOC)); 
+    float seasonValue = WatchyDusk2Dawn::getCurrentAstronomicalSeasonValue(year, month, day, lat);
+    int yy = 71.0f + (seasonValue / 360.0f) * (132.0f - 71.0f);
+    display.drawBitmap(116, yy, arr, 3, 5, color);
+
     moonRise.queryTime = now_utc; 
 
     moonRise.calculate(
@@ -539,33 +591,35 @@ void Watchy7SEG::drawMoonTimes() {
             display.drawBitmap(116, 137, noset, 22, 5, color);
         }
     }
+
 }
 
-
-void Watchy7SEG::drawSunTimes() {
-  Dusk2Dawn location(LOC);
+void Watchy7SEG::drawSun() {
+  time_t ct = now();
+  bool isDST = Watchy::isDST(ct);
   int year = currentTime.Year + 1970;
   int32_t month = currentTime.Month;
   int32_t day = currentTime.Day;
-  time_t ct = now();
-  bool isDST = Watchy::isDST(ct);
-  int sr = location.sunrise(year, month, day, isDST);
-  int ss = location.sunset(year, month, day, isDST);
+  float lat = GET_LATITUDE((LOC)); 
+  float lon = GET_LONGITUDE((LOC));
+  float tz = LOC_TZ;
+  int sr = WatchyDusk2Dawn::sunrise (year, month, day, lat, lon, tz, isDST);
+  int ss = WatchyDusk2Dawn::sunset (year, month, day, lat, lon, tz,  isDST);
   int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
-  const uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
   bool isPolarSummer = false;
   int highest_min = 0;
   int lowest_min = 0;
-
-  if (sr == -1 || ss == -1) {
-    if (location.isPolarWinter(year, month, day, isDST)) {
-      display.drawBitmap(139, 67, polarwinter, 44, 5, color);
-      display.drawBitmap(139, 137, polarwinter, 44, 5, color);
-      return;
-    } else {
+  
+  
+  if (sr == -1 && ss == -1) {
+    float solar_declination = WatchyDusk2Dawn::getSolarDeclination(year, month, day);
+    if (lat * solar_declination >= 0) {
+      //if (WatchyDusk2Dawn::isPolarWinter(year, month, day, lat, lon, tz, isDST)) {
+      //return; 
       isPolarSummer = true;
-      //highest_min = location.getSolarNoonTime(year, month, day, isDST);
-      //lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
+      highest_min = WatchyDusk2Dawn::getSolarNoonTime (year, month, day, lat, lon, tz, isDST);
+      lowest_min = WatchyDusk2Dawn::getSolarMidnightTime (year, month, day, lat, lon, tz, isDST);
+
       if (lowest_min < highest_min) {
         sr = lowest_min;
         ss = highest_min;
@@ -576,6 +630,78 @@ void Watchy7SEG::drawSunTimes() {
     }
   }
 
+
+  if (isPolarSummer) {
+    double total_minutes_in_day = 1440.0;
+    double now_adjusted = (now_minutes - sr + total_minutes_in_day);
+    now_adjusted = fmod(now_adjusted, total_minutes_in_day);
+    double tx = 95.0 / total_minutes_in_day * now_adjusted;
+    int t = static_cast<int>(std::round(tx)) * 2;
+    if (t < 190) { 
+      bool isNorth = IS_NORTH;
+      int x = 125 + (isNorth ? SunCurve[t] : (61 - SunCurve[t]));
+      int y = 124 - SunCurve[t + 1];
+
+      display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
+      display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
+    }
+  } else {
+    if (now_minutes >= sr || now_minutes <= ss) {
+      bool isNorth = IS_NORTH;
+      double tx = 95.0 / (ss - sr) * (now_minutes - sr);
+      int t = static_cast<int>(std::round(tx)) * 2;
+
+      if (t < 190) {
+        int x = 125 + (isNorth ? SunCurve[t] : (61 - SunCurve[t]));
+        int y = 124 - SunCurve[t + 1];
+
+        display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
+        display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
+      }
+    }
+  }
+}
+
+ 
+void Watchy7SEG::drawSunTimes() {
+  int year = currentTime.Year + 1970;
+  int32_t month = currentTime.Month;
+  int32_t day = currentTime.Day;
+  float lat = GET_LATITUDE((LOC)); 
+  float lon = GET_LONGITUDE((LOC));
+  float tz = LOC_TZ;
+  time_t ct = now();
+  bool isDST = Watchy::isDST(ct);
+  int sr = WatchyDusk2Dawn::sunrise(year, month, day, lat, lon, tz, isDST);
+  int ss = WatchyDusk2Dawn::sunset(year, month, day, lat, lon, tz, isDST);
+  int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
+  const uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
+  bool isPolarSummer = false;
+  int highest_min = 0;
+  int lowest_min = 0;
+  /*
+  if (sr == -1 || ss == -1) {
+    float solar_declination = 0;
+    float solar_declination = WatchyDusk2Dawn::getSolarDeclination(year, month, day);
+    if (lat * solar_declination < 0) {
+      //if (WatchyDusk2Dawn::isPolarWinter(year, month, day, lat, lon, tz, isDST)) {
+      display.drawBitmap(139, 67, polarwinter, 44, 5, color);
+      display.drawBitmap(139, 137, polarwinter, 44, 5, color);
+      return;
+    } else {
+      isPolarSummer = true;
+      highest_min = WatchyDusk2Dawn::getSolarNoonTime(year, month, day, lat, lon, tz, isDST);
+      lowest_min = WatchyDusk2Dawn::getSolarMidnightTime(year, month, day, lat, lon, tz, isDST);
+      if (lowest_min < highest_min) {
+        sr = lowest_min;
+        ss = highest_min;
+      } else {
+        sr = lowest_min;
+        ss = highest_min;
+      }
+    }
+  }
+  */
   int travel_range = isPolarSummer ? 1440 : ss - sr;
   long current_minutes = now_minutes;
   int tk;
@@ -593,7 +719,9 @@ void Watchy7SEG::drawSunTimes() {
     }
   }
 
-  display.drawBitmap(110, 72 + tk, arr, 3, 5, color);
+  float seasonValue = WatchyDusk2Dawn::getCurrentAstronomicalSeasonValue(year, month, day, lat);
+  int yy = 71.0f + (seasonValue / 360.0f) * (132.0f - 71.0f);
+  display.drawBitmap(116, yy, arr, 3, 5, color);
 
   int sunrise_h = sr / 60;
   int sunrise_m = sr % 60;
@@ -612,7 +740,7 @@ void Watchy7SEG::drawSunTimes() {
     display.drawBitmap(139, 137, sunset, 28, 5, color);
   }
   drawTimeDigits(sunrise_h, sunrise_m, 116, 67);
-  if (!isPolarSummer) {
+  if (isPolarSummer) {
     display.drawBitmap(139, 67, polarsummer, 51, 5, color);
   } else {
     display.drawBitmap(139, 67, sunrise, 30, 5, color);
@@ -678,80 +806,6 @@ void Watchy7SEG::drawSunTimes() {
 }
 
 
-void Watchy7SEG::drawSun() {
-  time_t ct = now();
-  Dusk2Dawn location(LOC);
-  bool isDST = Watchy::isDST(ct);
-  int year = currentTime.Year + 1970;
-  int32_t month = currentTime.Month;
-  int32_t day = currentTime.Day;
-  int sr = location.sunrise(year, month, day, isDST);
-  int ss = location.sunset(year, month, day, isDST);
-  int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
-  bool isPolarSummer = false;
-
-  if (sr == -1 && ss == -1) {
-    if (location.isPolarWinter(year, month, day, isDST)) {
-      return; 
-      isPolarSummer = true;
-      int highest_min = location.getSolarNoonTime(year, month, day, isDST);
-      int lowest_min = location.getSolarMidnightTime(year, month, day, isDST);
-
-      if (lowest_min < highest_min) {
-        sr = lowest_min;
-        ss = highest_min;
-      } else {
-        sr = lowest_min;
-        ss = highest_min;
-      }
-    }
-  }
-
-  int coor[190] = {
-      0,0, 1,0, 2,1, 3,1, 4,2, 5,2, 6,6, 7,7, 8,8, 9,9, 9,10, 10,11,
-      10,12, 11,13, 11,14, 12,15, 12,16, 13,17, 13,18, 13,19, 14,20,
-      14,21, 14,22, 15,23, 15,24, 16,25, 16,26, 17,27, 17,28, 18,29,
-      18,30, 19,31, 19,32, 19,33, 20,34, 20,35, 21,36, 21,37, 22,38,
-      22,39, 23,40, 24,41, 25,42, 26,43, 27,44, 28,44, 
-      29,44, 30,44, 32,44, 33,44,
-      34,44, 35,43, 36,42, 37,41, 38,40, 39,39, 39,38, 40,37, 40,36,
-      41,35, 41,34, 42,33, 42,32, 42,31, 43,30, 43,29, 44,28, 44,27,
-      45,26, 45,25, 46,24, 46,23, 47,22, 47,21, 47,20, 48,19, 48,18,
-      48,17, 49,16, 49,15, 50,14, 50,13, 51,12, 51,11, 52,10, 52,9,
-      53,8, 54,7, 55,6, 56,5, 57,2, 58,2, 59,1, 60,1, 61,0 
-  };
-  
-  if (isPolarSummer) {
-    double total_minutes_in_day = 1440.0;
-    double now_adjusted = (now_minutes - sr + total_minutes_in_day);
-    now_adjusted = fmod(now_adjusted, total_minutes_in_day);
-    double tx = 95.0 / total_minutes_in_day * now_adjusted;
-    int t = static_cast<int>(std::round(tx)) * 2;
-    if (t < 190) { 
-      bool isNorth = IS_NORTH;
-      int x = 125 + (isNorth ? coor[t] : (61 - coor[t]));
-      int y = 124 - coor[t + 1];
-
-      display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
-      display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
-    }
-  } else {
-    if (now_minutes >= sr || now_minutes <= ss) {
-      bool isNorth = IS_NORTH;
-      double tx = 95.0 / (ss - sr) * (now_minutes - sr);
-      int t = static_cast<int>(std::round(tx)) * 2;
-
-      if (t < 190) {
-        int x = 125 + (isNorth ? coor[t] : (61 - coor[t]));
-        int y = 124 - coor[t + 1];
-
-        display.drawBitmap(x - 9, y - 9, sun, 18, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
-        display.drawBitmap(x - 9, y - 9, sundisk, 18, 18, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
-      }
-    }
-  }
-}
-
 void Watchy7SEG::drawWeather() {
   weatherData currentWeather = getWeatherData((currentTime.Minute == 0 || firstWeatherNotDone) ? OPENWEATHERMAP_URL : "");
   firstWeatherNotDone = false;
@@ -784,8 +838,8 @@ void Watchy7SEG::drawWeather() {
 
   const unsigned char *weatherIcon;
   weatherIcon = chip;
-  Serial.print("weatherConditionCode:");
-  Serial.print(weatherConditionCode);
+  //Serial.print("weatherConditionCode:");
+  //Serial.print(weatherConditionCode);
   if (weatherConditionCode > 801) {
     weatherIcon = cloudy;
   } else if (weatherConditionCode == 801) {

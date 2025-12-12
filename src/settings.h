@@ -11,6 +11,7 @@
 #define METRIC true
 // ... you have also set your weather url to unit=imperial
 #define LOC 49.35, 8.65, 1
+#define LOC_TZ 1.0
 #define OPENWEATHERMAP_URL "https://api.openweathermap.org/data/3.0/onecall?lat=49.35&lon=8.6&exclude=minutely,hourly,daily,alerts&appid=yourapikey&units=metric&lang=de" // open weather api
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600L
@@ -22,6 +23,7 @@
 #define WEEKDAY_THU "Donnerstag"
 #define WEEKDAY_FRI "Freitag"
 #define WEEKDAY_SAT "Samstag"
+#define WEEKDAY_MAXNoOFCHARS 4
 #define MONTH_JAN "Jan"
 #define MONTH_FEB "Feb"
 #define MONTH_MAR "Mar"
