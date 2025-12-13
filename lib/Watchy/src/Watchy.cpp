@@ -1,4 +1,5 @@
 #include "Watchy.h"
+#include "../../../src/settings.h"
 
 #ifdef ARDUINO_ESP32S3_DEV
 Watchy32KRTC Watchy::RTC;
@@ -946,12 +947,7 @@ void Watchy::_configModeCallback(WiFiManager *myWiFiManager) {
 
 bool Watchy::connectWiFi() {
   WIFI_CONFIGURED = true;
-  if (WL_CONNECT_FAILED ==
-      WiFi.begin("WLAN4",
-                 "17041963")) { // WiFi not setup, you can also use hard
-                                // coded credentials
-                                // with WiFi.begin(SSID,PASS);
-    // WIFI_CONFIGURED = false;
+  if (WL_CONNECT_FAILED ==  WiFi.begin(WLAN_SSID, WLAN_PWD)) { 
   } else {
     if (WL_CONNECTED == WiFi.waitForConnectResult()) {
       // ...attempt to connect for 10s

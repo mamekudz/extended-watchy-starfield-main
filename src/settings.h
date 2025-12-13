@@ -16,6 +16,9 @@
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600L
 
+#define WLAN_SSID "myWLAN"
+#define WLAN_PWD "myPWD"
+
 #define WEEKDAY_SUN "Sonntag"
 #define WEEKDAY_MON "Montag"
 #define WEEKDAY_TUS "Dienstag"

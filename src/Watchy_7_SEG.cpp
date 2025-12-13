@@ -85,7 +85,7 @@ const PROGMEM char *const PROGMEM dmonthNames_P[] = {
     dmonthStr10, dmonthStr11, dmonthStr12};
 
     
-int SunCurve[190] = {
+const PROGMEM int SunCurve[190] = {
       0,0, 1,0, 2,1, 3,1, 4,2, 5,2, 6,6, 7,7, 8,8, 9,9, 9,10, 10,11,
       10,12, 11,13, 11,14, 12,15, 12,16, 13,17, 13,18, 13,19, 14,20,
       14,21, 14,22, 15,23, 15,24, 16,25, 16,26, 17,27, 17,28, 18,29,

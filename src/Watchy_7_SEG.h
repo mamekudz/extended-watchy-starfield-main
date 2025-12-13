@@ -13,7 +13,7 @@
 class Watchy7SEG : public Watchy{
     using Watchy::Watchy;
     public:
-       void drawWatchFace();
+        void drawWatchFace();
         void drawTime();
         void drawSeconds();
         void drawMemTime();
