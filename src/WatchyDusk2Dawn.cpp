@@ -68,33 +68,12 @@ float WatchyDusk2Dawn::getSolarDeclination(int y, int m, int d) {
     return sunDeclination(t);
 }
 
-/*
-bool WatchyDusk2Dawn::isPolarWinter(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST) {
-    // Ruft die neue statische Methode mit allen Parametern auf
-    int sunrise_time = sunrise(y, m, d, latitude, longitude, timezone, isDST);
-    int sunset_time = sunset(y, m, d, latitude, longitude, timezone, isDST);
-
-    if (sunrise_time != -1 || sunset_time != -1) {
-        return false;
-    }
-
-    float solar_declination = getSolarDeclination(y, m, d);
-
-    // Nutzt den übergebenen latitude-Parameter
-    if (latitude * solar_declination < 0) {
-        return true;
-    } else {
-        return false;
-    }
-}
-*/
 
 int WatchyDusk2Dawn::getSolarNoonTime(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST) {
     float jday = jDay(y, m, d);
     float t = fractionOfCentury(jday);
     float E = equationOfTime(t);
     
-    // Nutzt die übergebenen Parameter
     float noon_utc_minutes = 720.0 - (4.0 * longitude) - E;
     float total_offset_minutes = timezone * 60.0;
     if (isDST) {
@@ -111,7 +90,6 @@ int WatchyDusk2Dawn::getSolarNoonTime(int y, int m, int d, float latitude, float
 }
 
 int WatchyDusk2Dawn::getSolarMidnightTime(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST) {
-    // Nutzt die übergebenen Parameter beim Aufruf
     int noon_time = getSolarNoonTime(y, m, d, latitude, longitude, timezone, isDST);
     int midnight_time = noon_time + 720;
     if (midnight_time >= 1440) {

@@ -24,6 +24,10 @@ RTC_DATA_ATTR bool USB_PLUGGED_IN = false;
 RTC_DATA_ATTR tmElements_t bootTime;
 RTC_DATA_ATTR uint32_t lastIPAddress;
 RTC_DATA_ATTR char lastSSID[30];
+// RTC Speicher für Fast Connect
+RTC_DATA_ATTR uint8_t rtc_wifi_channel = 0;
+RTC_DATA_ATTR uint8_t rtc_wifi_bssid[6];
+RTC_DATA_ATTR bool rtc_valid_config = false;
 
 void Watchy::init(String datetime) {
   Serial.begin(115200);
@@ -946,8 +950,62 @@ void Watchy::_configModeCallback(WiFiManager *myWiFiManager) {
 }
 
 bool Watchy::connectWiFi() {
+    WIFI_CONFIGURED = false;
+    WiFi.mode(WIFI_STA);
+
+    // --- START DER OPTIMIERUNG ---
+    // Prüfen, ob eine statische IP definiert wurde (Länge des Strings > 0)
+    if (String(WLAN_IP).length() > 0) {
+        IPAddress local_IP, gateway, subnet, dns;
+        
+        // Konvertierung der Strings aus settings.h in IPAddress Objekte
+        if (local_IP.fromString(WLAN_IP) && 
+            gateway.fromString(WLAN_GATEWAY) && 
+            subnet.fromString(WLAN_SUBNET) && 
+            dns.fromString(WLAN_DNS)) {
+            
+            WiFi.config(local_IP, gateway, subnet, dns);
+        }
+    }
+    // --- ENDE DER OPTIMIERUNG ---
+
+    // Verbindung mit RTC-Daten beschleunigen
+    if (rtc_valid_config) {
+        WiFi.begin(WLAN_SSID, WLAN_PWD, rtc_wifi_channel, rtc_wifi_bssid);
+    } else {
+        WiFi.begin(WLAN_SSID, WLAN_PWD);
+    }
+
+    // Warten auf Verbindung (Timeout auf 10s wie im Original)
+    unsigned long startAttemptTime = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
+        delay(100); // Kurze Pause zur Stabilisierung
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        // Erfolg: Kanal und BSSID für den nächsten Boot im RTC merken
+        rtc_wifi_channel = WiFi.channel();
+        memcpy(rtc_wifi_bssid, WiFi.BSSID(), 6);
+        rtc_valid_config = true;
+
+        lastIPAddress = WiFi.localIP();
+        WiFi.SSID().toCharArray(lastSSID, 30);
+        WIFI_CONFIGURED = true;
+    } else {
+        // Fehlgeschlagen: Funk aus, beim nächsten Mal Full-Scan
+        rtc_valid_config = false;
+        WiFi.mode(WIFI_OFF);
+        btStop();
+        WIFI_CONFIGURED = false;
+    }
+
+    return WIFI_CONFIGURED;
+}
+
+/*
+bool Watchy::connectWiFi() {
   WIFI_CONFIGURED = true;
-  if (WL_CONNECT_FAILED ==  WiFi.begin(WLAN_SSID, WLAN_PWD)) { 
+  if (WL_CONNECT_FAILED == WiFi.begin(WLAN_SSID, WLAN_PWD)) { 
   } else {
     if (WL_CONNECTED == WiFi.waitForConnectResult()) {
       // ...attempt to connect for 10s
@@ -963,6 +1021,7 @@ bool Watchy::connectWiFi() {
   }
   return WIFI_CONFIGURED;
 }
+*/
 /*
 void Watchy::showUpdateFW() {
   display.setFullWindow();

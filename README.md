@@ -31,11 +31,12 @@ Features
 * Memory Timestamp: Press Back-button while seconds display mode to set memory timestamp => differnce in hours and seconds will be shown after this in seconds-mode,
   press up-button while seconds display mode to clear memory timestamp, press menu-button while seconds display mode to switch off seconds display mode without any
   memory timestamp changes. (Nice option to remember taking medication.)
-* sun display based on north or south hemisphere (left to right or right to left)
-* sun display shows no data while polar winter or polar sun position in polar summer if geocoordinates indicates a polar position.
+* the sun indicator does not display any data when the geocoordinates determine a polar winter, with the polar winter being displayed.
+* during the polar summer, the time until the next noon or midnight is displayed.
 * 24 Hour Display and imperial units are now configurable in settings.h.
 * Season indicator: Display of the local season as vertical text, display of the astronomical season as an arrow on the scale (0° to 360°)
-
+* WLAN with optional energy-saving mode and faster connection time (static IP, 90% reduction in normal connection time, connection in less than a second instead of the previous 3 to 7 seconds)
+  
 All basic configurations can be done in settings.h.
 
 I own two Watchys. Strangely enough, the displays behave differently; only one Watchy performs the partial update correctly. Set DISPLAYTYPE in settings.h
@@ -82,9 +83,11 @@ Funktionen
   Drücken Sie die Aufwärts-Taste während der Sekundenanzeige, um den Speicherzeitstempel zu löschen, drücken Sie die Menü-Taste während der Sekundenanzeige, um den Sekundenanzeigemodus ohne Änderungen am Speicherzeitstempel auszuschalten.
   (Praktische Option, um an die Einnahme von Medikamenten zu erinnern.)
 * Sonnenanzeige basierend auf der nördlichen oder südlichen Hemisphäre (von links nach rechts oder von rechts nach links)
-* Die Sonnenanzeige zeigt keine Daten an, wenn die Geokoordinaten eine polare Position anzeigen, d. h. während des Polarwinters oder bei polarer Sonnenposition im Polarsommer.
+* Die Sonnenanzeige zeigt keine Daten an, wenn die Geokoordinaten einen Polarwinter bestimmen, mit Anzeige des Polarwinters. 
+* Im Polarsommer wird die Dauer bis zum nächsten Mittag oder bis zur nächsten Mitternacht angezeigt.
 * 24-Stunden-Anzeige und imperiale Einheiten sind jetzt in settings.h konfigurierbar.
 * Saisonanzeige: Anzeige der lokalen Jahreszeit als vertikaler Text, Anzeige der astronomischen Jahreszeit als Pfeil auf der Skala (0° bis 360°)
+* WLAN mit optionalem Energiesparmodus und schnellerer Verbindungszeit (statische IP, Reduzierung um 90% der normalen Verbdingunszeit, erbindung innerhalb weniger als einer Sekunde anstatt wie bisher 3 bis 7 Sekunden)
 
 Alle Grundkonfigurationen können in settings.h vorgenommen werden.
 

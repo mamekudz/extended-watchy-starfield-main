@@ -4,7 +4,6 @@
 #include "Arduino.h"
 #include <math.h>
 
-// Das Enum bleibt als C++-Feature erhalten
 enum Season {
     SPRING, 
     SUMMER, 
@@ -12,7 +11,6 @@ enum Season {
     WINTER 
 };
 
-// Die Klasse wird zum reinen Container für statische Methoden
 class WatchyDusk2Dawn {
     public:
     
@@ -21,8 +19,6 @@ class WatchyDusk2Dawn {
     
     static int getSolarNoonTime(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST);
     static int getSolarMidnightTime(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST);
-    
-    //static bool isPolarWinter(int y, int m, int d, float latitude, float longitude, float timezone, bool isDST);
     
     static float getCurrentAstronomicalSeasonValue(int y, int m, int d, float latitude);
     static Season getCurrentSeason(int y, int m, int d, float latitude); 
