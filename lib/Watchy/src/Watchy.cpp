@@ -1,5 +1,6 @@
 #include "Watchy.h"
 #include "../../../src/settings.h"
+#include "../../../src/version.h"
 
 #ifdef ARDUINO_ESP32S3_DEV
 Watchy32KRTC Watchy::RTC;
@@ -378,6 +379,9 @@ void Watchy::showAbout() {
   display.setTextColor(GxEPD_WHITE);
   display.setCursor(0, 20);
 
+  display.print("FW: ");
+  display.println(FW_VERSION);
+
   display.print("LibVer: ");
   display.println(WATCHY_LIB_VER);
 
@@ -389,10 +393,44 @@ void Watchy::showAbout() {
   display.print(voltage);
   display.println("V");
 
+  time_t utc = getUTC();
+  tmElements_t utcTm;
+  breakTime(utc, utcTm);
+  display.print("UTC: ");
+  if (utcTm.Hour < 10) {
+    display.print("0");
+  }
+  display.print(utcTm.Hour);
+  display.print(":");
+  if (utcTm.Minute < 10) {
+    display.print("0");
+  }
+  display.print(utcTm.Minute);
+  display.print(":");
+  if (utcTm.Second < 10) {
+    display.print("0");
+  }
+  display.println(utcTm.Second);
+
+  long offset    = localOffset(utc);
+  long absOffset = offset < 0 ? -offset : offset;
+  display.print("Off: ");
+  display.print(offset < 0 ? "-" : "+");
+  if (absOffset / 3600 < 10) {
+    display.print("0");
+  }
+  display.print(absOffset / 3600);
+  display.print(":");
+  if ((absOffset % 3600) / 60 < 10) {
+    display.print("0");
+  }
+  display.print((absOffset % 3600) / 60);
+  display.println(isDST(utc) ? " DST" : "");
+
 #ifndef ARDUINO_ESP32S3_DEV
   display.print("Uptime: ");
   time_t b = makeTime(bootTime);
-  time_t c = getUTC();
+  time_t c = utc;
   int totalSeconds = c - b;
   // int seconds = (totalSeconds % 60);
   int minutes = (totalSeconds % 3600) / 60;
@@ -442,18 +480,18 @@ void Watchy::vibMotor(uint8_t intervalMs, uint8_t length) {
 }
 
 void Watchy::readLocalTime() {
-  tmElements_t utcTm;
-  RTC.read(utcTm);
-  time_t utc = makeTime(utcTm);
-  long dstOff = isDST(utc) ? 3600 : 0;
-  time_t local = utc + gmtOffset + dstOff;
-  breakTime(local, currentTime);
+  time_t utc = getUTC();
+  breakTime(utc + localOffset(utc), currentTime);
 }
 
 time_t Watchy::getUTC() {
   tmElements_t utcTm;
   RTC.read(utcTm);
   return makeTime(utcTm);
+}
+
+long Watchy::localOffset(time_t utcTime) {
+  return gmtOffset + (isDST(utcTime) ? 3600L : 0L);
 }
 
 void Watchy::setTime() {
@@ -620,9 +658,7 @@ void Watchy::setTime() {
   localTm.Second = 0;
 
   time_t localEpoch = makeTime(localTm);
-  time_t approxUtc = localEpoch - gmtOffset;
-  long dstOff = isDST(approxUtc) ? 3600 : 0;
-  time_t utc = localEpoch - gmtOffset - dstOff;
+  time_t utc = localEpoch - localOffset(localEpoch - gmtOffset);
 
   tmElements_t utcTm;
   breakTime(utc, utcTm);

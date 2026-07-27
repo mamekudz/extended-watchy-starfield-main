@@ -347,28 +347,34 @@ void Watchy7SEG::drawSeconds() {
 
   int secDigits[2] = {currentTime.Second / 10, currentTime.Second % 10};
 
-  display.fillRect(clearX, clearY, clearW, clearH, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
   const uint16_t bitmap_w = 16;
   const uint16_t bitmap_h = 25;
   const uint16_t color = DARKMODE ? GxEPD_WHITE : GxEPD_BLACK;
+  const uint16_t background = DARKMODE ? GxEPD_BLACK : GxEPD_WHITE;
+
+  // Beim Minutenwechsel zuerst das Stunden-/Minutenfeld in einem eigenen
+  // Fenster ausgeben. setPartialWindow verwirft den Pufferinhalt, deshalb
+  // dürfen die Sekundenziffern erst danach gezeichnet werden.
+  if (currentTime.Second == 0) {
+    if (DISPLAYTYPE == 1) {
+      display.setPartialWindow(11, 5, 200 - 11, 53);
+      display.fillRect(11, 5, 200 - 11, 53, background);
+      drawTime();
+      display.nextPage();
+      display.setPartialWindow(clearX, clearY, clearW, clearH);
+    } else {
+      drawTime();
+    }
+  }
+
+  display.fillRect(clearX, clearY, clearW, clearH, background);
   for (int i = 0; i < 2; i++) {
     int digit = secDigits[i];
     if (digit >= 0 && digit <= 9) {
       display.drawBitmap(sec_x[i], clearY, dd_bitmaps[digit], bitmap_w, bitmap_h, color);
     }
   }
-  if (currentTime.Second == 0) {
-    if (DISPLAYTYPE == 1) {
-      display.setPartialWindow(11, 5, 200 - 11, 53);
-      display.fillRect(11, 5, 200 - 11, 53, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
-    }
-    drawTime();
-    display.fillRect(clearX, clearY, clearW, clearH, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);
-    if (DISPLAYTYPE == 1) {
-      display.nextPage();
-      display.setPartialWindow(clearX, clearY, clearW, clearH);
-    }
-  }
+
   if (DISPLAYTYPE == 1) {
     display.nextPage();
   } else {
@@ -539,8 +545,7 @@ void Watchy7SEG::drawMoonTimes() {
     int moon_set_h, moon_set_m;
     
     time_t now_utc = getUTC();
-    long dstOff = Watchy::isDST(now_utc) ? 3600L : 0L;
-    long offset_sec = gmtOffset + dstOff;
+    long offset_sec = localOffset(now_utc);
     
     int year = currentTime.Year + 1970;
     int32_t month = currentTime.Month;
@@ -600,13 +605,14 @@ void Watchy7SEG::drawMoonTimes() {
 
 void Watchy7SEG::drawSun() {
   time_t utc = getUTC();
-  bool isDST = Watchy::isDST(utc);
+  // Zeitzone inkl. Sommerzeit aus derselben Quelle wie die Uhrzeit, daher isDST = false
+  bool isDST = false;
   int year = currentTime.Year + 1970;
   int32_t month = currentTime.Month;
   int32_t day = currentTime.Day;
   float lat = GET_LATITUDE((LOC)); 
   float lon = GET_LONGITUDE((LOC));
-  float tz = LOC_TZ;
+  float tz = localOffset(utc) / 3600.0f;
   int sr = WatchyDusk2Dawn::sunrise (year, month, day, lat, lon, tz, isDST);
   int ss = WatchyDusk2Dawn::sunset (year, month, day, lat, lon, tz,  isDST);
   int now_minutes = currentTime.Hour * 60 + currentTime.Minute;
@@ -652,12 +658,14 @@ void Watchy7SEG::drawSun() {
       }
     } else {
   #endif
-    if (now_minutes >= sr || now_minutes <= ss) {
+    if (ss > sr && now_minutes >= sr && now_minutes <= ss) {
       bool isNorth = IS_NORTH;
       double tx = 95.0 / (ss - sr) * (now_minutes - sr);
       int t = static_cast<int>(std::round(tx)) * 2;
+      if (t < 0) t = 0;
+      if (t > 188) t = 188;
 
-      if (t < 190) {
+      {
         int x = 125 + (isNorth ? SunCurve[t] : (61 - SunCurve[t]));
         int y = 124 - SunCurve[t + 1];
 
@@ -677,9 +685,10 @@ void Watchy7SEG::drawSunTimes() {
   int32_t day = currentTime.Day;
   float lat = GET_LATITUDE((LOC)); 
   float lon = GET_LONGITUDE((LOC));
-  float tz = LOC_TZ;
   time_t utc = getUTC();
-  bool isDST = Watchy::isDST(utc);
+  // Zeitzone inkl. Sommerzeit aus derselben Quelle wie die Uhrzeit, daher isDST = false
+  float tz = localOffset(utc) / 3600.0f;
+  bool isDST = false;
   int sr = WatchyDusk2Dawn::sunrise(year, month, day, lat, lon, tz, isDST);
   int ss = WatchyDusk2Dawn::sunset(year, month, day, lat, lon, tz, isDST);
   int now_minutes = currentTime.Hour * 60 + currentTime.Minute;

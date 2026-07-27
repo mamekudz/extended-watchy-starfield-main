@@ -4,6 +4,7 @@ English
 
 An extended Sstarfield watchface for Watchy
 
+**Version 1.1.0** (the running firmware version is shown in the About screen)
 
 ![picture](/assets/watchy_seconds.gif)
 
@@ -36,7 +37,18 @@ Features
 * 24 Hour Display and imperial units are now configurable in settings.h.
 * Season indicator: Display of the local season as vertical text, display of the astronomical season as an arrow on the scale (0° to 360°)
 * WLAN with optional energy-saving mode and faster connection time (static IP, 90% reduction in normal connection time, connection in less than a second instead of the previous 3 to 7 seconds)
-  
+
+Changes in 1.1.0
+* The hardware RTC now always runs in UTC. The NTP sync writes plain UTC, the GMT offset and the DST hour are added only at display time.
+* DST is derived from the UTC time and the configured GMT offset and follows the EU rule (last Sunday in March and October, switching at 02:00 local standard time).
+* Sunrise, sunset, moonrise and moonset are calculated from UTC with one shared offset, so they stay correct across the DST switch.
+* Setting the time manually converts the entered local time back to UTC before storing it.
+* The seconds display no longer leaves artefacts when the seconds roll over to 00.
+* The About screen shows the firmware version, the raw UTC time read from the RTC and the active offset including a DST marker.
+
+Note after updating to 1.1.0: flashing does not reset the RTC, it keeps running on its battery. Run Menu -> Sync NTP once, otherwise the old local time is interpreted as UTC
+and the watch runs ahead by the offset.
+
 All basic configurations can be done in settings.h.
 
 I own two Watchys. Strangely enough, the displays behave differently; only one Watchy performs the partial update correctly. Set DISPLAYTYPE in settings.h
@@ -53,6 +65,8 @@ Deutsch
 # Erweiterung der reparierten Starfield Watchy-Firmware inkl. Sekundenanzeige durch Teil-Update
 
 Ein erweitertes Sstarfield-Zifferblatt für Watchy
+
+**Version 1.1.0** (die laufende Firmware-Version wird im About-Screen angezeigt)
 
 ![picture](/assets/watchy_seconds.gif)
 
@@ -88,6 +102,18 @@ Funktionen
 * 24-Stunden-Anzeige und imperiale Einheiten sind jetzt in settings.h konfigurierbar.
 * Saisonanzeige: Anzeige der lokalen Jahreszeit als vertikaler Text, Anzeige der astronomischen Jahreszeit als Pfeil auf der Skala (0° bis 360°)
 * WLAN mit optionalem Energiesparmodus und schnellerer Verbindungszeit (statische IP, Reduzierung um 90% der normalen Verbdingunszeit, erbindung innerhalb weniger als einer Sekunde anstatt wie bisher 3 bis 7 Sekunden)
+
+
+Änderungen in 1.1.0
+* Die Hardware-Uhr läuft jetzt grundsätzlich in UTC. Der NTP-Sync schreibt reines UTC, der GMT-Offset und die Sommerzeitstunde werden erst bei der Anzeige addiert.
+* Die Sommerzeit wird aus der UTC-Zeit und dem konfigurierten GMT-Offset bestimmt und folgt der EU-Regel (letzter Sonntag im März und Oktober, Umschaltung um 02:00 Normalzeit).
+* Sonnen- und Mondauf- bzw. -untergang werden aus UTC mit einem gemeinsamen Offset berechnet und bleiben dadurch über den Zeitumstellungstermin hinweg korrekt.
+* Beim manuellen Stellen der Uhr wird die eingegebene Ortszeit vor dem Speichern nach UTC zurückgerechnet.
+* Die Sekundenanzeige hinterlässt beim Übergang auf 00 keine Bildreste mehr.
+* Der About-Screen zeigt die Firmware-Version, die rohe UTC-Zeit aus der RTC und den aktiven Offset inklusive Sommerzeit-Kennzeichnung.
+
+Hinweis nach dem Update auf 1.1.0: Ein Flash setzt die RTC nicht zurück, sie läuft auf ihrer Batterie weiter. Einmal Menü -> Sync NTP ausführen, sonst wird die alte Ortszeit
+als UTC interpretiert und die Uhr geht um den Offset vor.
 
 Alle Grundkonfigurationen können in settings.h vorgenommen werden.
 

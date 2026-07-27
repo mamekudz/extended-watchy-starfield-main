@@ -100,6 +100,7 @@ public:
   void updateFWBegin();
   void readLocalTime();
   time_t getUTC();
+  long localOffset(time_t utcTime);
   bool isDST(time_t utcTime);
 
   void showWatchFace(bool partialRefresh);
