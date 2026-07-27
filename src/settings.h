@@ -4,6 +4,9 @@
 // =================================================================================
 #define NTP_SERVER "pool.ntp.org"
 #define GMT_OFFSET_SEC 3600L
+#define USE_DST true
+// true  = EU daylight saving (last Sunday in March/October)
+// false = locations without DST (Iceland, Arizona, most of Africa, …)
 
 #define DISPLAYTYPE 1
 // 1 == correct working display

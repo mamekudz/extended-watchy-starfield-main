@@ -4,7 +4,7 @@ English
 
 An extended Sstarfield watchface for Watchy
 
-**Version 1.1.0** (the running firmware version is shown in the About screen)
+**Version 1.1.1** (the running firmware version is shown in the About screen)
 
 ![picture](/assets/watchy_seconds.gif)
 
@@ -38,6 +38,9 @@ Features
 * Season indicator: Display of the local season as vertical text, display of the astronomical season as an arrow on the scale (0° to 360°)
 * WLAN with optional energy-saving mode and faster connection time (static IP, 90% reduction in normal connection time, connection in less than a second instead of the previous 3 to 7 seconds)
 
+Changes in 1.1.1
+* Daylight saving can be switched off in settings.h via USE_DST. Set it to false for locations without winter/summer time (e.g. Iceland, Arizona, most of Africa); true keeps the EU rule.
+
 Changes in 1.1.0
 * The hardware RTC now always runs in UTC. The NTP sync writes plain UTC, the GMT offset and the DST hour are added only at display time.
 * DST is derived from the UTC time and the configured GMT offset and follows the EU rule (last Sunday in March and October, switching at 02:00 local standard time).
@@ -66,7 +69,7 @@ Deutsch
 
 Ein erweitertes Sstarfield-Zifferblatt für Watchy
 
-**Version 1.1.0** (die laufende Firmware-Version wird im About-Screen angezeigt)
+**Version 1.1.1** (die laufende Firmware-Version wird im About-Screen angezeigt)
 
 ![picture](/assets/watchy_seconds.gif)
 
@@ -103,6 +106,9 @@ Funktionen
 * Saisonanzeige: Anzeige der lokalen Jahreszeit als vertikaler Text, Anzeige der astronomischen Jahreszeit als Pfeil auf der Skala (0° bis 360°)
 * WLAN mit optionalem Energiesparmodus und schnellerer Verbindungszeit (statische IP, Reduzierung um 90% der normalen Verbdingunszeit, erbindung innerhalb weniger als einer Sekunde anstatt wie bisher 3 bis 7 Sekunden)
 
+
+Änderungen in 1.1.1
+* Sommerzeit lässt sich in settings.h über USE_DST abschalten. false für Orte ohne Winter-/Sommerzeit (z. B. Island, Arizona, große Teile Afrikas); true behält die EU-Regel.
 
 Änderungen in 1.1.0
 * Die Hardware-Uhr läuft jetzt grundsätzlich in UTC. Der NTP-Sync schreibt reines UTC, der GMT-Offset und die Sommerzeitstunde werden erst bei der Anzeige addiert.

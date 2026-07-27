@@ -2,6 +2,10 @@
 #include "../../../src/settings.h"
 #include "../../../src/version.h"
 
+#ifndef USE_DST
+#define USE_DST true
+#endif
+
 #ifdef ARDUINO_ESP32S3_DEV
 Watchy32KRTC Watchy::RTC;
 #define ACTIVE_LOW 0
@@ -1264,6 +1268,10 @@ bool Watchy::syncNTP(long gmt, String ntpServer) {
 }
 
 bool Watchy::isDST(time_t utcTime) {
+  if (!USE_DST) {
+    return false;
+  }
+
   time_t standardLocal = utcTime + gmtOffset;
   struct tm ti;
   gmtime_r(&standardLocal, &ti);
